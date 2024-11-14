@@ -2,17 +2,18 @@
 #include <vector>
 #include <algorithm>
 #include <queue>
+#include <climits>
 
 using namespace std;
 
 struct Process {
-    int id;          // Process ID
-    int burstTime;   // Burst Time
-    int arrivalTime; // Arrival Time
-    int priority;    // Priority (lower value means higher priority)
-    int waitingTime; // Waiting Time
+    int id;             // Process ID
+    int burstTime;      // Burst Time
+    int arrivalTime;    // Arrival Time
+    int priority;       // Priority (lower value means higher priority)
+    int waitingTime;    // Waiting Time
     int turnaroundTime; // Turnaround Time
-    int remainingTime; // Remaining Time for SJF and Round Robin
+    int remainingTime;  // Remaining Time for SJF and Round Robin
 };
 
 // Function to get input for processes
@@ -122,6 +123,7 @@ void RoundRobin(vector<Process> processes, int timeQuantum) {
     int currentTime = 0, n = processes.size(), completed = 0;
     queue<int> readyQueue;
 
+    // Initialize the ready queue with processes that have arrived at time 0
     for (int i = 0; i < n; i++) {
         if (processes[i].arrivalTime <= currentTime) {
             readyQueue.push(i);
@@ -131,6 +133,12 @@ void RoundRobin(vector<Process> processes, int timeQuantum) {
     while (completed != n) {
         if (readyQueue.empty()) {
             currentTime++;
+            // Add processes to the queue that have now arrived
+            for (int i = 0; i < n; i++) {
+                if (processes[i].arrivalTime <= currentTime && processes[i].remainingTime > 0) {
+                    readyQueue.push(i);
+                }
+            }
             continue;
         }
 
@@ -151,13 +159,15 @@ void RoundRobin(vector<Process> processes, int timeQuantum) {
                  << ", Turnaround Time = " << processes[idx].turnaroundTime << endl;
         }
 
+        // Add any newly arrived processes to the queue
         for (int i = 0; i < n; i++) {
             if (processes[i].arrivalTime <= currentTime && processes[i].remainingTime > 0 && 
-                find(readyQueue.begin(), readyQueue.end(), i) == readyQueue.end()) {
+                (i != idx && processes[i].arrivalTime == currentTime)) {
                 readyQueue.push(i);
             }
         }
 
+        // Re-add the current process if it has remaining time
         if (processes[idx].remainingTime > 0) {
             readyQueue.push(idx);
         }
